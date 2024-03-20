@@ -1,5 +1,9 @@
+from textnode import TextNode
+
+
 def main() -> None:
-    print("hello world")
+    node = TextNode("Hello World", "bold")
+    print(node)
     return
 
 
