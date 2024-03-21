@@ -15,6 +15,16 @@ class TextNode:
         return f'TextNode(text="{self.text}", text_type="{self.text_type}", url="{self.url}")'
 
 
+def text_to_textnodes(text: str) -> list:
+    node = TextNode(text, "text")
+    nodes = split_nodes_delimiter([node], "bold", "**")
+    nodes = split_nodes_delimiter(nodes, "italic", "*")
+    nodes = split_nodes_delimiter(nodes, "code", "`")
+    nodes = split_nodes_image_and_link(nodes)
+    nodes = add_spaces_to_appropriate_text_nodes(nodes)
+    return nodes
+
+
 def text_node_to_html(text_node: TextNode) -> LeafNode:
     match text_node.text_type:
         case "text":
@@ -39,18 +49,18 @@ def split_nodes_delimiter(old_nodes: list, text_type: str, delimiter: str) -> li
         if not isinstance(node, TextNode):
             new_nodes.append(node)
         else:
-            new_nodes.append(create_styled_text_nodes_from_node(node, text_type, delimiter))
+            new_nodes.extend(create_styled_text_nodes_from_node(node, text_type, delimiter))
 
     return new_nodes
 
 
-def split_nodes_image(old_nodes: list) -> list:
+def split_nodes_image_and_link(old_nodes: list) -> list:
     new_nodes = []
-    for node in [node_ for node_ in old_nodes if node_.text]:
-        if not node.text:
-            continue
+    for node in old_nodes:
+        if node.text_type != "text":
+            new_nodes.append(node)
         else:
-            new_nodes.append(create_link_and_image_nodes_from_text_node(node))
+            new_nodes.extend(create_link_and_image_nodes_from_text_node(node))
 
     return new_nodes
 
@@ -81,7 +91,6 @@ def create_link_and_image_nodes_from_text_node(node: TextNode) -> list:
     if words:  # catch any leftovers
         result_nodes.append(TextNode(" ".join(words), "text"))
 
-    add_spaces_to_appropriate_text_nodes(result_nodes)
     return result_nodes
 
 
@@ -94,6 +103,8 @@ def create_link_or_image_node_from_markdown_link_or_image(markdown: str) -> Text
 
 
 def add_spaces_to_appropriate_text_nodes(nodes: list) -> list:
+    """Given a list of TextNodes, some of which have a type of "text" and some of which do not, adds a space to all the
+    "text" nodes that are adjacent to any non-"text" nodes."""
     for i, node in enumerate(nodes):  # Add spaces where needed
         if node.text_type != "text" and i != 0:
             nodes[i - 1].text += " "
@@ -119,7 +130,14 @@ def create_styled_text_nodes_from_node(node: TextNode, text_type: str, delimiter
 
     tokens = node.text.split()
     for token in tokens:
-        if token.startswith(delimiter) and raw_tokens:
+        if token.startswith(delimiter) and token.endswith(delimiter) and raw_tokens:
+            raw_text = " ".join(raw_tokens)
+            raw_tokens.clear()
+            result_nodes.append(TextNode(raw_text, "text"))
+            result_nodes.append(TextNode(token.lstrip(delimiter).rstrip(delimiter), text_type))
+        elif token.startswith(delimiter) and token.endswith(delimiter):
+            result_nodes.append(TextNode(token.lstrip(delimiter).rstrip(delimiter), text_type))
+        elif token.startswith(delimiter) and raw_tokens:
             raw_text = " ".join(raw_tokens)
             raw_tokens.clear()
             result_nodes.append(TextNode(raw_text, "text"))
@@ -141,7 +159,6 @@ def create_styled_text_nodes_from_node(node: TextNode, text_type: str, delimiter
     if raw_tokens:  # catch any leftovers
         result_nodes.append(TextNode(" ".join(raw_tokens), "text"))
 
-    add_spaces_to_appropriate_text_nodes(result_nodes)
     return result_nodes
 
 
@@ -153,8 +170,3 @@ def extract_markdown_image_or_link(text: str) -> tuple:
     return match
 
 
-test = TextNode(
-    "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
-    "text",
-)
-print(create_link_and_image_nodes_from_text_node(test))

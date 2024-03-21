@@ -22,9 +22,9 @@ class TextNodeTest(unittest.TestCase):
     def test_create_styled_nodes_from_node(self):
         node = TextNode("This is text with a `code block` word", "text")
         result = [
-            TextNode("This is text with a ", "text"),
+            TextNode("This is text with a", "text"),
             TextNode("code block", "code"),
-            TextNode(" word", "text")
+            TextNode("word", "text")
         ]
         self.assertEqual(textnode.create_styled_text_nodes_from_node(node, "code", "`"), result)
         return
@@ -45,14 +45,32 @@ class TextNodeTest(unittest.TestCase):
             "text",
         )
         result = [
-            TextNode("This is text with an ", "text"),
+            TextNode("This is text with an", "text"),
             TextNode("image", "image", "https://i.imgur.com/zjjcJKZ.png"),
-            TextNode(" and another ", "text"),
+            TextNode("and another", "text"),
             TextNode(
                 "second image", "image", "https://i.imgur.com/3elNhQu.png"
             ),
         ]
         self.assertEqual(result, textnode.create_link_and_image_nodes_from_text_node(test))
+        return
+
+    def test_text_to_text_nodes(self):
+        text = "This is **text** with an *italic* word and a `code block` and an ![image](https://i.imgur.com/zjjcJKZ.png) and a [link](https://boot.dev)"
+        result = [
+            TextNode("This is ", "text"),
+            TextNode("text", "bold"),
+            TextNode(" with an ", "text"),
+            TextNode("italic", "italic"),
+            TextNode(" word and a ", "text"),
+            TextNode("code block", "code"),
+            TextNode(" and an ", "text"),
+            TextNode("image", "image", "https://i.imgur.com/zjjcJKZ.png"),
+            TextNode(" and a ", "text"),
+            TextNode("link", "link", "https://boot.dev"),
+        ]
+        self.assertEqual(result, textnode.text_to_textnodes(text))
+        return
 
 
 if __name__ == '__main__':
