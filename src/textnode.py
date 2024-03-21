@@ -1,4 +1,5 @@
 from htmlnode import LeafNode
+import re
 
 
 class TextNode:
@@ -11,7 +12,7 @@ class TextNode:
         return (self.text == other.text) and (self.text_type == other.text_type) and (self.url == other.url)
 
     def __repr__(self):
-        return f'TextNode(text="{self.text}", text_type="{self.text_type}", url="{self.url if self.url else ""}")'
+        return f'TextNode(text="{self.text}", text_type="{self.text_type}", url="{self.url}")'
 
 
 def text_node_to_html(text_node: TextNode) -> LeafNode:
@@ -48,7 +49,7 @@ def create_styled_nodes_from_node(node: TextNode, text_type: str, delimiter: str
     bold, italics, or inline code formatting into a new TextNode of the appropriate type."""
     if node.text.count(delimiter) % 2 != 0:  # Valid markdown must contain an even number of delimiters
         raise Exception(f"Invalid markdown syntax for text: {node.text}")
-    if node.text_type == "text":
+    if node.text_type != "text":
         return [node]
 
     result_nodes = []
@@ -87,3 +88,29 @@ def create_styled_nodes_from_node(node: TextNode, text_type: str, delimiter: str
             result_nodes[i + 1].text = " " + result_nodes[i + 1].text
 
     return result_nodes
+
+
+def extract_markdown_images(text: str) -> list:
+    """Takes a Markdown-formatted string with embedded images and returns a list of tuples, where each tuple is of the
+    format ("<image alt text>", "<image url>")"""
+    result = []
+
+    markdown_image_pattern = r"!\[(.*?)\]\((.*?)\)"
+    matches = re.findall(markdown_image_pattern, text)
+    for match in matches:
+        result.append((match[0], match[1]))
+
+    return result
+
+
+def extract_markdown_links(text: str) -> list:
+    """Takes a Markdown-formatted string with embedded images and returns a list of tuples, where each tuple is of the
+    format ("<link anchor text>", "<link url>")"""
+    result = []
+
+    markdown_link_pattern = r"\[(.*?)\]\((.*?)\)"
+    matches = re.findall(markdown_link_pattern, text)
+    for match in matches:
+        result.append((match[0], match[1]))
+
+    return result

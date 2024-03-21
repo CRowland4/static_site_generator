@@ -1,6 +1,7 @@
 import unittest
+import textnode
 
-from textnode import TextNode, create_styled_nodes_from_node
+from textnode import TextNode
 
 
 class TextNodeTest(unittest.TestCase):
@@ -13,15 +14,32 @@ class TextNodeTest(unittest.TestCase):
         node6 = TextNode("This is a DIFFERENT text node", "bold")
         self.assertEqual(node1, node2)
         self.assertEqual(node3, node4)
-        self.assertNotEquals(node1, node3)
-        self.assertNotEquals(node1, node4)
-        self.assertNotEquals(node5, node6)
+        self.assertNotEqual(node1, node3)
+        self.assertNotEqual(node1, node4)
+        self.assertNotEqual(node5, node6)
         return
 
     def test_create_styled_nodes_from_node(self):
         node = TextNode("This is text with a `code block` word", "text")
-        result = [TextNode(text="This is text with a ", text_type="text", url=""), TextNode(text="code block", text_type="code", url=""), TextNode(text=" word", text_type="text", url="")]
-        self.assertEqual(create_styled_nodes_from_node(node, "code", "`"), result)
+        result = [
+            TextNode("This is text with a ", "text"),
+            TextNode("code block", "code"),
+            TextNode(" word", "text")
+                  ]
+        self.assertEqual(textnode.create_styled_nodes_from_node(node, "code", "`"), result)
+        return
+
+    def test_extract_markdown_images(self):
+        text = ("This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and ![another]("
+                "https://i.imgur.com/dfsdkjfd.png)")
+        result = [("image", "https://i.imgur.com/zjjcJKZ.png"), ("another", "https://i.imgur.com/dfsdkjfd.png")]
+        self.assertEqual(textnode.extract_markdown_images(text), result)
+        return
+
+    def test_extract_markdown_links(self):
+        text = "This is text with a [link](https://www.example.com) and [another](https://www.example.com/another)"
+        result = [("link", "https://www.example.com"), ("another", "https://www.example.com/another")]
+        self.assertEqual(textnode.extract_markdown_links(text), result)
         return
 
 
