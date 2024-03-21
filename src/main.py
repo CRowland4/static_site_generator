@@ -1,4 +1,5 @@
 from textnode import TextNode
+from htmlnode import LeafNode
 
 
 def main() -> None:
