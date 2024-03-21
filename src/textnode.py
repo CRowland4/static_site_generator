@@ -123,43 +123,37 @@ def create_styled_text_nodes_from_node(node: TextNode, text_type: str, delimiter
         return [node]
 
     result_nodes = []
-    raw_tokens = []
 
-    styled_tokens = []
-    styled_flag = False
-
-    tokens = node.text.split()
-    for token in tokens:
-        if token.startswith(delimiter) and token.endswith(delimiter) and raw_tokens:
-            raw_text = " ".join(raw_tokens)
-            raw_tokens.clear()
-            result_nodes.append(TextNode(raw_text, "text"))
+    text_tokens = []
+    for token in node.text.split():
+        if token.startswith(delimiter) and token.endswith(delimiter) and text_tokens:
+            result_nodes.append(create_text_node(text_tokens, "text"))
+            text_tokens.clear()
             result_nodes.append(TextNode(token.lstrip(delimiter).rstrip(delimiter), text_type))
         elif token.startswith(delimiter) and token.endswith(delimiter):
             result_nodes.append(TextNode(token.lstrip(delimiter).rstrip(delimiter), text_type))
-        elif token.startswith(delimiter) and raw_tokens:
-            raw_text = " ".join(raw_tokens)
-            raw_tokens.clear()
-            result_nodes.append(TextNode(raw_text, "text"))
-            styled_flag = True
-            styled_tokens.append(token.lstrip(delimiter))
-        elif token.startswith(delimiter) and not raw_tokens:
-            styled_flag = True
-            styled_tokens.append(token.lstrip(delimiter))
+        elif token.startswith(delimiter) and text_tokens:
+            result_nodes.append(create_text_node(text_tokens, "text"))
+            text_tokens.clear()
+            text_tokens.append(token.lstrip(delimiter))
+        elif token.startswith(delimiter) and not text_tokens:
+            text_tokens.append(token.lstrip(delimiter))
         elif token.endswith(delimiter):
-            styled_tokens.append(token.rstrip(delimiter))
-            result_nodes.append(TextNode(" ".join(styled_tokens), text_type))
-            styled_tokens.clear()
-            styled_flag = False
-        elif styled_flag:
-            styled_tokens.append(token)
-        elif not styled_flag:
-            raw_tokens.append(token)
+            text_tokens.append(token.rstrip(delimiter))
+            result_nodes.append(TextNode(" ".join(text_tokens), text_type))
+            text_tokens.clear()
+        else:
+            text_tokens.append(token)
 
-    if raw_tokens:  # catch any leftovers
-        result_nodes.append(TextNode(" ".join(raw_tokens), "text"))
+    if text_tokens:  # catch any leftovers
+        result_nodes.append(TextNode(" ".join(text_tokens), "text"))
 
     return result_nodes
+
+
+def create_text_node(list_of_tokens: list[str], text_type: str) -> TextNode:
+    raw_text = " ".join(list_of_tokens)
+    return TextNode(raw_text, text_type)
 
 
 def extract_markdown_image_or_link(text: str) -> tuple:
@@ -168,5 +162,3 @@ def extract_markdown_image_or_link(text: str) -> tuple:
     markdown_image_pattern = r"!?\[(.*?)\]\((.*?)\)"
     match = re.findall(markdown_image_pattern, text)[0]
     return match
-
-
