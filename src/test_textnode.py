@@ -25,22 +25,34 @@ class TextNodeTest(unittest.TestCase):
             TextNode("This is text with a ", "text"),
             TextNode("code block", "code"),
             TextNode(" word", "text")
-                  ]
-        self.assertEqual(textnode.create_styled_nodes_from_node(node, "code", "`"), result)
+        ]
+        self.assertEqual(textnode.create_styled_text_nodes_from_node(node, "code", "`"), result)
         return
 
-    def test_extract_markdown_images(self):
-        text = ("This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and ![another]("
-                "https://i.imgur.com/dfsdkjfd.png)")
-        result = [("image", "https://i.imgur.com/zjjcJKZ.png"), ("another", "https://i.imgur.com/dfsdkjfd.png")]
-        self.assertEqual(textnode.extract_markdown_images(text), result)
+    def test_extract_markdown_image_or_link(self):
+        image_text = "![another](https://i.imgur.com/dfsdkjfd.png)"
+        result = ("another", "https://i.imgur.com/dfsdkjfd.png")
+        self.assertEqual(textnode.extract_markdown_image_or_link(image_text), result)
+
+        link_text = "[another](https://www.example.com/another)"
+        result = ("another", "https://www.example.com/another")
+        self.assertEqual(textnode.extract_markdown_image_or_link(link_text), result)
         return
 
-    def test_extract_markdown_links(self):
-        text = "This is text with a [link](https://www.example.com) and [another](https://www.example.com/another)"
-        result = [("link", "https://www.example.com"), ("another", "https://www.example.com/another")]
-        self.assertEqual(textnode.extract_markdown_links(text), result)
-        return
+    def test_create_link_or_image_nodes_from_text_node(self):
+        test = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            "text",
+        )
+        result = [
+            TextNode("This is text with an ", "text"),
+            TextNode("image", "image", "https://i.imgur.com/zjjcJKZ.png"),
+            TextNode(" and another ", "text"),
+            TextNode(
+                "second image", "image", "https://i.imgur.com/3elNhQu.png"
+            ),
+        ]
+        self.assertEqual(result, textnode.create_link_and_image_nodes_from_text_node(test))
 
 
 if __name__ == '__main__':
