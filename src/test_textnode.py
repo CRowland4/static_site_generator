@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode
+from textnode import TextNode, create_styled_nodes_from_node
 
 
 class TextNodeTest(unittest.TestCase):
@@ -16,6 +16,12 @@ class TextNodeTest(unittest.TestCase):
         self.assertNotEquals(node1, node3)
         self.assertNotEquals(node1, node4)
         self.assertNotEquals(node5, node6)
+        return
+
+    def test_create_styled_nodes_from_node(self):
+        node = TextNode("This is text with a `code block` word", "text")
+        result = [TextNode(text="This is text with a ", text_type="text", url=""), TextNode(text="code block", text_type="code", url=""), TextNode(text=" word", text_type="text", url="")]
+        self.assertEqual(create_styled_nodes_from_node(node, "code", "`"), result)
         return
 
 
