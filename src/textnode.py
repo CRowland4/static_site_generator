@@ -1,4 +1,4 @@
-from htmlnode import LeafNode
+from htmlnode import HTMLNode, ParentNode, LeafNode
 import re
 
 
@@ -15,6 +15,78 @@ class TextNode:
         return f'TextNode(text="{self.text}", text_type="{self.text_type}", url="{self.url}")'
 
 
+def markdown_to_html_node(markdown: str) -> ParentNode:
+    parent_node = ParentNode(tag="div", children=[])
+
+    markdown_blocks = markdown_to_blocks(markdown)
+    for block in markdown_blocks:
+        block_type = block_to_block_type(block)
+        parent_node.children.append(markdown_block_to_html_node(block, block_type))
+
+    return parent_node
+
+
+def markdown_block_to_html_node(block: str, block_type: str) -> ParentNode:
+    if block_type.startswith("heading"):
+        return heading_block_to_html_node(block, block_type[:-1])
+    if block_type == "code":
+        return code_block_to_html_node(block)
+    if block_type == "quote":
+        return quote_block_to_html_node(block)
+    if block_type == "unordered_list":
+        return unordered_list_block_to_html_node(block)
+    if block_type == "ordered_list":
+        return ordered_list_block_to_html_node(block)
+    if block_type == "paragraph":
+        return paragraph_block_to_html_node(block)
+
+
+def paragraph_block_to_html_node(block: str) -> ParentNode:
+    text_node = text_to_textnodes(block)
+    return ParentNode(tag="p", children=[text_node])
+
+
+def ordered_list_block_to_html_node(block: str) -> ParentNode:
+    lines = block.splitlines()
+    list_item_nodes = []
+    for line in lines:
+        text_nodes = text_to_textnodes(line)
+        list_item_nodes.append(ParentNode(tag="li", children=[text_nodes]))
+
+    return ParentNode(tag="ol", children=list_item_nodes)
+
+
+def unordered_list_block_to_html_node(block: str) -> ParentNode:
+    lines = [line.lstrip("*-") for line in block.splitlines()]
+    list_item_nodes = []
+    for line in lines:
+        text_nodes = text_to_textnodes(line)
+        list_item_nodes.append(ParentNode(tag="li", children=[text_nodes]))
+
+    return ParentNode(tag="ul", children=list_item_nodes)
+
+
+def quote_block_to_html_node(block: str) -> ParentNode:
+    block = block.lstrip("> ")
+    text_nodes = text_to_textnodes(block)
+    leaf_nodes = list(map(text_node_to_html, text_nodes))
+    return ParentNode(tag="blockquote", children=leaf_nodes)
+
+
+def code_block_to_html_node(block: str) -> ParentNode:
+    text_nodes = text_to_textnodes(block)
+    leaf_nodes = list(map(text_node_to_html, text_nodes))
+    pre_node = ParentNode(tag="pre", children=leaf_nodes)
+    return ParentNode(tag="code", children=[pre_node])
+
+
+def heading_block_to_html_node(block: str, heading_num) -> ParentNode:
+    text_nodes = text_to_textnodes(block)
+    leaf_nodes = list(map(text_node_to_html, text_nodes))
+
+    return ParentNode(tag=f"h{heading_num}", children=leaf_nodes)
+
+
 def text_to_textnodes(text: str) -> list:
     node = TextNode(text, "text")
     nodes = split_nodes_delimiter([node], "bold", "**")
@@ -23,17 +95,6 @@ def text_to_textnodes(text: str) -> list:
     nodes = split_nodes_image_and_link(nodes)
     nodes = add_spaces_to_appropriate_text_nodes(nodes)
     return nodes
-
-
-def markdown_to_blocks(markdown: str) -> list[str]:
-    raw_blocks = markdown.split("\n\n")
-    blocks = []
-    for block in raw_blocks:
-        cleaned_block = block.strip()
-        if cleaned_block:
-            blocks.append(cleaned_block)
-
-    return blocks
 
 
 def text_node_to_html(text_node: TextNode) -> LeafNode:
@@ -52,6 +113,43 @@ def text_node_to_html(text_node: TextNode) -> LeafNode:
             return LeafNode("", "img", {"src": text_node.url, "alt": text_node.text})
         case _:
             raise ValueError(f"Unexpected text type: {text_node.text_type}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+def block_to_block_type(markdown_block: str) -> str:
+    if 1 <= markdown_block.count('#') <= 6:
+        return f"heading{markdown_block.count('#')}"
+    if markdown_block.startswith("```") and markdown_block.endswith("```"):
+        return "code"
+    if all([line.startswith(">") for line in markdown_block.split("\n")]):
+        return "quote"
+    if all([line.startswith("*") or line.startswith("-") for line in markdown_block.split("\n")]):
+        return "unordered_list"
+    if is_block_ordered_list(markdown_block):
+        return "ordered_list"
+
+    return "paragraph"
+
+
+def markdown_to_blocks(markdown: str) -> list[str]:
+    raw_blocks = markdown.split("\n\n")
+    blocks = []
+    for block in raw_blocks:
+        cleaned_block = block.strip()
+        if cleaned_block:
+            blocks.append(cleaned_block)
+
+    return blocks
 
 
 def split_nodes_delimiter(old_nodes: list, text_type: str, delimiter: str) -> list:
@@ -173,3 +271,19 @@ def extract_markdown_image_or_link(text: str) -> tuple:
     markdown_image_pattern = r"!?\[(.*?)\]\((.*?)\)"
     match = re.findall(markdown_image_pattern, text)[0]
     return match
+
+
+def is_block_ordered_list(markdown_block: str) -> bool:
+    lines = markdown_block.split("\n")
+
+    nums = []
+    for line in lines:
+        line_split = line.split(".")
+        if not line_split:
+            return False
+        if not line_split[0].isnumeric():
+            return False
+
+        nums.append(int(line_split[0]))
+
+    return all([nums[i - 1] == nums[i] - 1 for i in range(1, len(nums))])
