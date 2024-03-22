@@ -1,4 +1,4 @@
-from htmlnode import HTMLNode, ParentNode, LeafNode
+from htmlnode import ParentNode, LeafNode
 import re
 
 
