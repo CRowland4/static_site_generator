@@ -78,9 +78,9 @@ def quote_block_to_html_node(block: str) -> ParentNode:
 
 
 def code_block_to_html_node(block: str) -> ParentNode:
-    block_without_ticks = block.strip("```")
-    pre_node = LeafNode(tag="pre", value=block_without_ticks)
-    return ParentNode(tag="code", children=[pre_node])
+    block_without_ticks = block.lstrip("```\n").rstrip("```")
+    code_node = LeafNode(tag="code", value=block_without_ticks)
+    return ParentNode(tag="pre", children=[code_node])
 
 
 def heading_block_to_html_node(block: str, heading_num) -> ParentNode:
