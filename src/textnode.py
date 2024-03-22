@@ -78,9 +78,8 @@ def quote_block_to_html_node(block: str) -> ParentNode:
 
 
 def code_block_to_html_node(block: str) -> ParentNode:
-    text_nodes = text_to_textnodes(block)
-    leaf_nodes = list(map(text_node_to_html, text_nodes))
-    pre_node = ParentNode(tag="pre", children=leaf_nodes)
+    block_without_ticks = block.strip("```")
+    pre_node = LeafNode(tag="pre", value=block_without_ticks)
     return ParentNode(tag="code", children=[pre_node])
 
 
@@ -93,9 +92,9 @@ def heading_block_to_html_node(block: str, heading_num) -> ParentNode:
 
 def text_to_textnodes(text: str) -> list:
     node = TextNode(text, "text")
-    nodes = split_nodes_delimiter([node], "bold", "**")
+    nodes = split_nodes_delimiter([node], "code", "`")
+    nodes = split_nodes_delimiter(nodes, "bold", "**")
     nodes = split_nodes_delimiter(nodes, "italic", "*")
-    nodes = split_nodes_delimiter(nodes, "code", "```")
     nodes = split_nodes_image_and_link(nodes)
     nodes = add_spaces_to_appropriate_text_nodes(nodes)
     return nodes
