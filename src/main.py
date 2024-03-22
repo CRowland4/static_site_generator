@@ -23,7 +23,7 @@ def generate_pages_recursive(dir_path_content: str, template_path: str, dest_dir
     for item in os.listdir(dir_path_content):
         path_to_item = os.path.join(dir_path_content, item)
         if os.path.isfile(path_to_item) and path_to_item.endswith(".md"):
-            dest_path = os.path.join(dest_dir_path, item)
+            dest_path = os.path.join(dest_dir_path, item).replace(".md", ".html")
             generate_page(path_to_item, template_path, dest_path)
         elif os.path.isdir(path_to_item):
             new_dest_dir_path = os.path.join(dest_dir_path, item)
