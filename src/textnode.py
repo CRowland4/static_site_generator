@@ -1,4 +1,4 @@
-from htmlnode import ParentNode, LeafNode
+from htmlnode import ParentNode, LeafNode, HTMLNode
 import re
 
 
@@ -15,7 +15,7 @@ class TextNode:
         return f'TextNode(text="{self.text}", text_type="{self.text_type}", url="{self.url}")'
 
 
-def markdown_to_html_node(markdown: str) -> ParentNode:
+def markdown_to_html_node(markdown: str) -> HTMLNode:
     parent_node = ParentNode(tag="div", children=[])
 
     markdown_blocks = markdown_to_blocks(markdown)
@@ -28,7 +28,7 @@ def markdown_to_html_node(markdown: str) -> ParentNode:
 
 def markdown_block_to_html_node(block: str, block_type: str) -> ParentNode:
     if block_type.startswith("heading"):
-        return heading_block_to_html_node(block, block_type[:-1])
+        return heading_block_to_html_node(block, block_type[-1])
     if block_type == "code":
         return code_block_to_html_node(block)
     if block_type == "quote":
@@ -42,16 +42,19 @@ def markdown_block_to_html_node(block: str, block_type: str) -> ParentNode:
 
 
 def paragraph_block_to_html_node(block: str) -> ParentNode:
-    text_node = text_to_textnodes(block)
-    return ParentNode(tag="p", children=[text_node])
+    text_nodes = text_to_textnodes(block)
+    leaf_nodes = list(map(text_node_to_html, text_nodes))
+    return ParentNode(tag="p", children=leaf_nodes)
 
 
 def ordered_list_block_to_html_node(block: str) -> ParentNode:
     lines = block.splitlines()
     list_item_nodes = []
     for line in lines:
-        text_nodes = text_to_textnodes(line)
-        list_item_nodes.append(ParentNode(tag="li", children=[text_nodes]))
+        line_without_numbers = " ".join(line.split(".")[1:])
+        text_nodes = text_to_textnodes(line_without_numbers)
+        leaf_nodes = list(map(text_node_to_html, text_nodes))
+        list_item_nodes.append(ParentNode(tag="li", children=leaf_nodes))
 
     return ParentNode(tag="ol", children=list_item_nodes)
 
@@ -61,7 +64,8 @@ def unordered_list_block_to_html_node(block: str) -> ParentNode:
     list_item_nodes = []
     for line in lines:
         text_nodes = text_to_textnodes(line)
-        list_item_nodes.append(ParentNode(tag="li", children=[text_nodes]))
+        leaf_nodes = list(map(text_node_to_html, text_nodes))
+        list_item_nodes.append(ParentNode(tag="li", children=leaf_nodes))
 
     return ParentNode(tag="ul", children=list_item_nodes)
 
@@ -81,7 +85,7 @@ def code_block_to_html_node(block: str) -> ParentNode:
 
 
 def heading_block_to_html_node(block: str, heading_num) -> ParentNode:
-    text_nodes = text_to_textnodes(block)
+    text_nodes = text_to_textnodes(block.lstrip("# "))
     leaf_nodes = list(map(text_node_to_html, text_nodes))
 
     return ParentNode(tag=f"h{heading_num}", children=leaf_nodes)
@@ -91,7 +95,7 @@ def text_to_textnodes(text: str) -> list:
     node = TextNode(text, "text")
     nodes = split_nodes_delimiter([node], "bold", "**")
     nodes = split_nodes_delimiter(nodes, "italic", "*")
-    nodes = split_nodes_delimiter(nodes, "code", "`")
+    nodes = split_nodes_delimiter(nodes, "code", "```")
     nodes = split_nodes_image_and_link(nodes)
     nodes = add_spaces_to_appropriate_text_nodes(nodes)
     return nodes
@@ -113,17 +117,6 @@ def text_node_to_html(text_node: TextNode) -> LeafNode:
             return LeafNode("", "img", {"src": text_node.url, "alt": text_node.text})
         case _:
             raise ValueError(f"Unexpected text type: {text_node.text_type}")
-
-
-
-
-
-
-
-
-
-
-
 
 
 def block_to_block_type(markdown_block: str) -> str:

@@ -25,7 +25,7 @@ class LeafNode(HTMLNode):
         super().__init__(tag=tag, props=props, value=value)
 
     def to_html(self):
-        if not self.value:
+        if self.value is None:
             raise ValueError("Must have a value")
         if not self.tag:
             return str(self.value)
@@ -39,7 +39,7 @@ class ParentNode(HTMLNode):
 
     def to_html(self):
         if not self.tag:
-            raise ValueError("Must have a value")
+            raise ValueError("Must have a tag")
         if not self.children:
             raise ValueError("Must have children")
 

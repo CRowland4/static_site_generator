@@ -5,15 +5,15 @@ from textnode import TextNode
 
 
 def main() -> None:
-    static = r".\static"
-    public = r".\public"
+    static = r"..\static"
+    public = r"..\public"
     shutil.rmtree(public)
     os.mkdir(public)
     copy_contents(static, public)
 
-    from_path = r".\content\index.md"
-    template_path = r".\template.html"
-    dest_path = r".\public\index.html"
+    from_path = r"..\content\index.md"
+    template_path = r"..\template.html"
+    dest_path = r"..\public\index.html"
     generate_page(from_path, template_path, dest_path)
 
     return
@@ -26,8 +26,9 @@ def generate_page(from_path: str, template_path: str, dest_path: str) -> None:
     with open(template_path, "r") as template:
         template_contents = template.read()
 
-    html_content = textnode.markdown_to_html_node(markdown_contents).to_html()
-    page_title = extract_title(markdown)
+    html = textnode.markdown_to_html_node(markdown_contents)
+    page_title = extract_title(from_path).strip()
+    html_content = html.to_html()
     template_contents = template_contents.replace("{{ Title }}", page_title)
     template_contents = template_contents.replace("{{ Content }}", html_content)
 
@@ -39,7 +40,7 @@ def generate_page(from_path: str, template_path: str, dest_path: str) -> None:
 
 def extract_title(markdown: str) -> str:
     with open(markdown) as file:
-        contents = file.readline()
+        contents = file.readlines()
 
     for line in contents:
         if line.startswith("#") and line[1] != "#":
@@ -63,5 +64,4 @@ def copy_contents(from_dir: str, to_dir: str) -> None:
 
 
 if __name__ == "__main__":
-    print(os.listdir(r"C:\Users\cjrow\PycharmProjects\static_site_generator"))
     main()
