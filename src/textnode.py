@@ -25,6 +25,17 @@ def text_to_textnodes(text: str) -> list:
     return nodes
 
 
+def markdown_to_blocks(markdown: str) -> list[str]:
+    raw_blocks = markdown.split("\n\n")
+    blocks = []
+    for block in raw_blocks:
+        cleaned_block = block.strip()
+        if cleaned_block:
+            blocks.append(cleaned_block)
+
+    return blocks
+
+
 def text_node_to_html(text_node: TextNode) -> LeafNode:
     match text_node.text_type:
         case "text":
@@ -162,3 +173,13 @@ def extract_markdown_image_or_link(text: str) -> tuple:
     markdown_image_pattern = r"!?\[(.*?)\]\((.*?)\)"
     match = re.findall(markdown_image_pattern, text)[0]
     return match
+
+
+foo = """This is **bolded** paragraph
+
+This is another paragraph with *italic* text and `code` here
+This is the same paragraph on a new line
+
+* This is a list
+* with items"""
+print(markdown_to_blocks(foo))
