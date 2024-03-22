@@ -5,15 +5,15 @@ from textnode import TextNode
 
 
 def main() -> None:
-    static = r"..\static"
-    public = r"..\public"
+    static = r".\static"
+    public = r".\public"
     shutil.rmtree(public)
     os.mkdir(public)
     copy_contents(static, public)
 
-    from_path = r"..\content\index.md"
-    template_path = r"..\template.html"
-    dest_path = r"..\public\index.html"
+    from_path = r".\content\index.md"
+    template_path = r".\template.html"
+    dest_path = r".\public\index.html"
     generate_page(from_path, template_path, dest_path)
 
     return
