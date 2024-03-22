@@ -173,13 +173,3 @@ def extract_markdown_image_or_link(text: str) -> tuple:
     markdown_image_pattern = r"!?\[(.*?)\]\((.*?)\)"
     match = re.findall(markdown_image_pattern, text)[0]
     return match
-
-
-foo = """This is **bolded** paragraph
-
-This is another paragraph with *italic* text and `code` here
-This is the same paragraph on a new line
-
-* This is a list
-* with items"""
-print(markdown_to_blocks(foo))

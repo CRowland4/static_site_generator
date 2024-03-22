@@ -72,6 +72,22 @@ class TextNodeTest(unittest.TestCase):
         self.assertEqual(result, textnode.text_to_textnodes(text))
         return
 
+    def test_markdown_to_blocks(self):
+        test = """This is **bolded** paragraph
+
+This is another paragraph with *italic* text and `code` here
+This is the same paragraph on a new line
+
+* This is a list
+* with items"""
+        result = [
+            'This is **bolded** paragraph',
+            'This is another paragraph with *italic* text and `code` here\nThis is the same paragraph on a new line',
+            '* This is a list\n* with items'
+        ]
+        self.assertEqual(textnode.markdown_to_blocks(test), result)
+        return
+
 
 if __name__ == '__main__':
     unittest.main()
